@@ -1,3 +1,4 @@
+
 # GC-Tune
 
 [![GitHub Release](https://img.shields.io/github/v/release/Bebrazui/GC-Tune?style=flat-square&color=2ea44f)](https://github.com/Bebrazui/GC-Tune/releases/latest)
@@ -5,66 +6,66 @@
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-brightgreen.svg?style=flat-square)](https://android.com)
 [![OriginOS](https://img.shields.io/badge/OriginOS-Supported-informational.svg?style=flat-square)](https://www.vivo.com/origin-os)
 
-An advanced system tuning utility and privilege channel implementation for OriginOS and vivo devices. GC-Tune leverages the Game Cube (Ultra Game Mode) execution environment to execute commands with elevated system privileges (`uid 1000` / `system`), install custom `.itz` themes, and apply custom icon pack coloring directly to the OriginOS launcher without root.
+Công cụ tinh chỉnh hệ thống nâng cao và triển khai kênh đặc quyền dành cho OriginOS và các thiết bị vivo. GC-Tune tận dụng môi trường thực thi của Game Cube (Chế độ Ultra Game Mode) để thực thi lệnh với quyền hệ thống nâng cao (`uid 1000` / `system`), cài đặt giao diện `.itz` tùy chỉnh và áp dụng màu sắc cho bộ biểu tượng trực tiếp trên trình khởi chạy OriginOS mà không cần root.
 
-[Download Latest Release](https://github.com/Bebrazui/GC-Tune/releases/latest) &bull; [Quick Setup](#quick-setup) &bull; [Features](#features) &bull; [Building](#building)
-
----
-
-## Overview
-
-GC-Tune is built around an IPC channel established through the privileged Game Cube subsystem. This grants `system` (uid 1000) execution capabilities to tune device settings, patch system themes, and tint icons with Material You and custom palettes.
-
-### Key Capabilities
-
-- **Privileged System Shell (`uid 1000`)**  
-  Run administrative shell commands directly under system credentials. Uses an idle-safe wake mechanism driven by `dumpsys SurfaceFlinger` and `logcat` signals without background polling or battery drain.
-
-- **OriginOS Theme Patcher (`.itz`)**  
-  Imports custom and third-party `.itz` theme archives, cleans up proprietary store metadata, and normalizes catalog identifiers (`id`, `id3`, `uid`) so custom themes can be previewed and applied via iTheme without license paywalls.
-
-- **System & Adaptive Icon Recoloring**  
-  Applies uniform icon tinting and styling directly into the OriginOS launcher:
-  - Material 3 and custom HEX color tinting
-  - Adjustable desaturation, brightness, and tint strength
-  - Custom background tiles and squircle corner radius adjustment
-  - Compatibility with standard third-party icon packs
-
-- **Zero Root Requirement**  
-  Requires no root access or bootloader unlocking. Operates purely through system framework integration and basic standard permissions (`WRITE_SECURE_SETTINGS` via ADB).
+[Tải bản phát hành mới nhất](https://github.com/Bebrazui/GC-Tune/releases/latest) &bull; [Thiết lập nhanh](#thiết-lập-nhanh) &bull; [Tính năng](#tổng-quan) &bull; [Biên dịch](#biên-dịch-từ-mã-nguồn)
 
 ---
 
-## Quick Setup
+## Tổng quan
 
-### 1. Installation
+GC-Tune hoạt động dựa trên một kênh IPC được thiết lập thông qua hệ thống con Game Cube có đặc quyền. Kênh này cung cấp khả năng thực thi lệnh với quyền `system` (uid 1000), cho phép tinh chỉnh cài đặt thiết bị, chỉnh sửa giao diện hệ thống và đổi màu biểu tượng bằng Material You cùng các bảng màu tùy chỉnh.
 
-Download the signed APK from the [Releases](https://github.com/Bebrazui/GC-Tune/releases/latest) page and install it on your device:
+### Các tính năng chính
+
+- **Trình dòng lệnh hệ thống có đặc quyền (`uid 1000`)**  
+  Thực thi trực tiếp các lệnh shell quản trị bằng thông tin xác thực của tài khoản hệ thống. Sử dụng cơ chế đánh thức an toàn khi ở trạng thái chờ, dựa trên tín hiệu từ `dumpsys SurfaceFlinger` và `logcat`, không cần thăm dò nền liên tục hay gây hao pin.
+
+- **Công cụ chỉnh sửa giao diện OriginOS (`.itz`)**  
+  Nhập các gói giao diện `.itz` tùy chỉnh và của bên thứ ba, loại bỏ siêu dữ liệu độc quyền của cửa hàng và chuẩn hóa các mã định danh danh mục (`id`, `id3`, `uid`) để có thể xem trước và áp dụng giao diện tùy chỉnh thông qua iTheme mà không bị chặn bởi cơ chế thu phí bản quyền.
+
+- **Đổi màu biểu tượng hệ thống và biểu tượng thích ứng**  
+  Áp dụng màu sắc và kiểu hiển thị đồng nhất trực tiếp lên trình khởi chạy OriginOS:
+  - Tô màu bằng Material 3 và mã màu HEX tùy chỉnh.
+  - Điều chỉnh độ bão hòa, độ sáng và cường độ màu.
+  - Tùy chỉnh ô nền và bán kính bo góc dạng squircle.
+  - Tương thích với các gói biểu tượng tiêu chuẩn của bên thứ ba.
+
+- **Không cần quyền root**  
+  Không yêu cầu quyền root hoặc mở khóa bootloader. Hoạt động thông qua tích hợp với framework hệ thống và các quyền tiêu chuẩn cơ bản (`WRITE_SECURE_SETTINGS` được cấp qua ADB).
+
+---
+
+## Thiết lập nhanh
+
+### 1. Cài đặt
+
+Tải APK đã ký từ trang [Releases](https://github.com/Bebrazui/GC-Tune/releases/latest) và cài đặt lên thiết bị:
 
 ```bash
 adb install -r gctune-signed.apk
 ```
 
-### 2. Grant Permissions
+### 2. Cấp quyền
 
-Grant `WRITE_SECURE_SETTINGS` via ADB once after installation:
+Sau khi cài đặt, cấp quyền `WRITE_SECURE_SETTINGS` một lần thông qua ADB:
 
 ```bash
 adb shell pm grant com.poc.gctune android.permission.WRITE_SECURE_SETTINGS
 ```
 
-### 3. Add to Game Cube
+### 3. Thêm vào Game Cube
 
-1. Open **Settings** &rarr; **Ultra Game Mode** (Game Cube).
-2. Go to **Supported Games** (Add Game).
-3. Under **Other Apps**, select **GC Tune** and add it to the game list.
-4. Launch GC Tune. The onboarding screen will confirm the active channel connection.
+1. Mở **Cài đặt** → **Ultra Game Mode** (Game Cube).
+2. Vào **Trò chơi được hỗ trợ** (Thêm trò chơi).
+3. Trong mục **Ứng dụng khác**, chọn **GC Tune** và thêm ứng dụng vào danh sách trò chơi.
+4. Khởi chạy GC Tune. Màn hình hướng dẫn ban đầu sẽ xác nhận kết nối kênh đang hoạt động.
 
 ---
 
-## Architecture & IPC Channel
+## Kiến trúc và kênh IPC
 
-```
+```text
  +-------------------------------------------------------+
  |                       GC Tune                         |
  |  com.poc.gctune (Activities / Foreground Service)      |
@@ -80,25 +81,26 @@ adb shell pm grant com.poc.gctune android.permission.WRITE_SECURE_SETTINGS
          +-------------------+-------------------+
          |                   |                   |
          v                   v                   v
-   System Shell        Theme Patcher        Icon Engine
- (uid 1000 execution)   (.itz rewrite)    (Launcher tint)
+   Trình dòng lệnh      Bộ chỉnh sửa        Bộ xử lý
+   hệ thống             giao diện           biểu tượng
+ (thực thi uid 1000)   (sửa đổi .itz)    (đổi màu launcher)
 ```
 
-The app initiates a lightweight foreground service (`ChannelService`) holding the layer and ACK receiver while commands run. The watcher daemon runs strictly event-driven via `logcat`, ensuring zero CPU usage when idle.
+Ứng dụng khởi chạy một dịch vụ nền trước gọn nhẹ (`ChannelService`), duy trì lớp hiển thị (layer) và bộ nhận ACK trong khi các lệnh được thực thi. Tiến trình theo dõi chạy hoàn toàn theo sự kiện thông qua `logcat`, bảo đảm không tiêu thụ CPU khi ở trạng thái chờ.
 
 ---
 
-## Building from Source
+## Biên dịch từ mã nguồn
 
-### Prerequisites
+### Yêu cầu
 
-- JDK 11 or higher
-- Android SDK (Platform 35 / Build-Tools 34.0.0+)
-- PowerShell (Windows / Linux / macOS)
+- JDK 11 trở lên.
+- Android SDK (Platform 35 / Build-Tools 34.0.0 trở lên).
+- PowerShell (Windows / Linux / macOS).
 
-### Build Steps
+### Các bước biên dịch
 
-Clone the repository and run the build script:
+Sao chép kho mã nguồn và chạy script build:
 
 ```bash
 git clone https://github.com/Bebrazui/GC-Tune.git
@@ -106,10 +108,10 @@ cd GC-Tune
 .\build.ps1
 ```
 
-The script compiles the Java sources using `javac`, bundles the classes into a DEX file via `d8`, packages the APK via `aapt`, and signs it using `apksigner`.
+Script sẽ biên dịch mã Java bằng `javac`, đóng gói các lớp thành tệp DEX thông qua `d8`, đóng gói APK bằng `aapt` và ký APK bằng `apksigner`.
 
 ---
 
-## Disclaimer
+## Tuyên bố miễn trừ trách nhiệm
 
-This project is intended for research, device customization, and educational purposes. Ensure you comply with your device manufacturer policies before modifying system parameters.
+Dự án này được phát triển nhằm phục vụ nghiên cứu, tùy chỉnh thiết bị và mục đích giáo dục. Hãy bảo đảm tuân thủ các chính sách của nhà sản xuất thiết bị trước khi thay đổi các thông số hệ thống.
