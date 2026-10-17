@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.poc.gctune"
-    android:versionCode="10"
-    android:versionName="1.0">
+    android:versionCode="13"
+    android:versionName="1.2.2">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="30" />
     <!-- QUERY_ALL_PACKAGES: without it Android hides third-party launchers apps
          from queryIntentActivities and only system icons get recolored -->
