@@ -23,7 +23,7 @@ if ($LASTEXITCODE -ne 0) { throw "d8 failed ($LASTEXITCODE)" }
 if (-not (Test-Path 'classes.dex')) { throw 'd8 failed' }
 
 Remove-Item gctune-unsigned.apk,gctune-aligned.apk,gctune-signed.apk,gctune-signed.apk.idsig -ErrorAction SilentlyContinue
-& "$bt\aapt.exe" package -f -M AndroidManifest.xml -I $androidJar -F gctune-unsigned.apk
+& "$bt\aapt.exe" package -f -M AndroidManifest.xml -S res -I $androidJar -F gctune-unsigned.apk
 if ($LASTEXITCODE -ne 0) { throw "aapt package failed ($LASTEXITCODE)" }
 & "$bt\aapt.exe" add gctune-unsigned.apk classes.dex | Out-Null
 if ($LASTEXITCODE -ne 0) { throw "aapt add failed ($LASTEXITCODE)" }

@@ -18,7 +18,10 @@
     <!-- lets the honest "command pending" notification be visible on 13+ -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- rest is zero permissions: everything privileged goes through the uid1000 channel -->
-    <application android:label="GC Tune">
+    <application
+        android:label="GC Tune"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round">
         <!-- first run: onboarding + jump into Game Cube settings -->
         <activity android:name=".SetupActivity" android:exported="true">
             <intent-filter>
