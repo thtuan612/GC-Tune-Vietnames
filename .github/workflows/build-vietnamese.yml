@@ -5,16 +5,24 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - "**/*.java"
+      - "AndroidManifest.xml"
       - "gctune-vi.patch"
+      - "build.ps1"
       - ".github/workflows/build-vietnamese.yml"
 
 permissions:
   contents: read
 
+concurrency:
+  group: build-vietnamese-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
-    name: Build APK
+    name: Patch, build and sign APK
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     steps:
       - name: Checkout source
@@ -28,12 +36,13 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: "platform-tools"
 
       - name: Install Android SDK packages
+        shell: bash
         run: |
-          sdkmanager --sdk_root="$ANDROID_HOME" \
+          set -euo pipefail
+          sdkmanager --sdk_root="${ANDROID_HOME}" \
+            "platform-tools" \
             "platforms;android-35" \
             "build-tools;34.0.0"
 
@@ -43,3 +52,108 @@ jobs:
           set -euo pipefail
           git apply --check gctune-vi.patch
           git apply gctune-vi.patch
+          git diff --check
+
+      - name: Build APK
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          SDK="${ANDROID_HOME}"
+          BT="${SDK}/build-tools/34.0.0"
+          ANDROID_JAR="${SDK}/platforms/android-35/android.jar"
+          OUT="${GITHUB_WORKSPACE}/build-output"
+          CLASSES="${OUT}/classes"
+          DEX="${OUT}/dex"
+
+          test -f "${ANDROID_JAR}"
+          test -x "${BT}/aapt"
+          test -x "${BT}/d8"
+          test -x "${BT}/zipalign"
+          test -x "${BT}/apksigner"
+
+          rm -rf "${OUT}"
+          mkdir -p "${CLASSES}" "${DEX}"
+
+          mapfile -t SOURCES < <(
+            find . -maxdepth 1 -type f -name '*.java' -print
+          )
+
+          if [ "${#SOURCES[@]}" -eq 0 ]; then
+            echo "ERROR: No Java source files found at repository root."
+            exit 1
+          fi
+
+          javac \
+            -source 8 \
+            -target 8 \
+            -encoding UTF-8 \
+            -bootclasspath "${ANDROID_JAR}" \
+            -classpath "${ANDROID_JAR}" \
+            -d "${CLASSES}" \
+            "${SOURCES[@]}"
+
+          test -f "${CLASSES}/com/poc/gctune/Main.class"
+          test -f "${CLASSES}/com/poc/gctune/PrefsActivity.class"
+          test -f "${CLASSES}/com/poc/gctune/SetupActivity.class"
+
+          jar cf "${OUT}/classes.jar" -C "${CLASSES}" .
+
+          "${BT}/d8" \
+            --release \
+            --lib "${ANDROID_JAR}" \
+            --output "${DEX}" \
+            "${OUT}/classes.jar"
+
+          test -s "${DEX}/classes.dex"
+
+          "${BT}/aapt" package \
+            -f \
+            -M "${GITHUB_WORKSPACE}/AndroidManifest.xml" \
+            -I "${ANDROID_JAR}" \
+            -F "${OUT}/unsigned.apk"
+
+          cp "${DEX}/classes.dex" "${OUT}/classes.dex"
+
+          (
+            cd "${OUT}"
+            "${BT}/aapt" add unsigned.apk classes.dex
+          )
+
+          "${BT}/zipalign" \
+            -f 4 \
+            "${OUT}/unsigned.apk" \
+            "${OUT}/aligned.apk"
+
+          keytool -genkeypair \
+            -keystore "${OUT}/test-release.keystore" \
+            -storepass android \
+            -keypass android \
+            -alias gctune \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 3650 \
+            -dname "CN=GC Tune Test, OU=CI, O=GC Tune, C=VN"
+
+          "${BT}/apksigner" sign \
+            --ks "${OUT}/test-release.keystore" \
+            --ks-key-alias gctune \
+            --ks-pass pass:android \
+            --key-pass pass:android \
+            --out "${OUT}/gctune-vietnamese.apk" \
+            "${OUT}/aligned.apk"
+
+          "${BT}/apksigner" verify \
+            --verbose \
+            "${OUT}/gctune-vietnamese.apk"
+
+          test -s "${OUT}/gctune-vietnamese.apk"
+          echo "APK build and signature verification completed."
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: GC-Tune-Vietnamese-APK
+          path: build-output/gctune-vietnamese.apk
+          if-no-files-found: error
+          retention-days: 14
