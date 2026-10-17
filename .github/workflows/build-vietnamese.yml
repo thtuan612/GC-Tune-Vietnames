@@ -7,6 +7,7 @@ on:
     paths:
       - "**/*.java"
       - "AndroidManifest.xml"
+      - "res/**"
       - "gctune-vi.patch"
       - "build.ps1"
       - ".github/workflows/build-vietnamese.yml"
@@ -53,6 +54,37 @@ jobs:
           git apply --check gctune-vi.patch
           git apply gctune-vi.patch
           git diff --check
+
+      - name: Prepare signing keystore
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.GCTUNE_KEYSTORE_BASE64 }}
+          KS_PASSWORD: ${{ secrets.GCTUNE_KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.GCTUNE_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          KS_PATH="${RUNNER_TEMP}/release.keystore"
+          if [ -n "${KEYSTORE_BASE64:-}" ]; then
+            echo "Dang dung keystore co dinh tu GitHub Secret (GCTUNE_KEYSTORE_BASE64)."
+            echo "${KEYSTORE_BASE64}" | base64 -d > "${KS_PATH}"
+            echo "KEYSTORE_PATH=${KS_PATH}" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=${KS_PASSWORD}" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=${KS_ALIAS:-gctune}" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Chua thiet lap secret GCTUNE_KEYSTORE_BASE64 - dang dung key TEST tam thoi. APK se doi chu ky moi lan build va khong the cai de (update) len ban da cai truoc do. Xem huong dan trong README de tao key co dinh."
+            keytool -genkeypair \
+              -keystore "${KS_PATH}" \
+              -storepass android \
+              -keypass android \
+              -alias gctune \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 3650 \
+              -dname "CN=GC Tune Test, OU=CI, O=GC Tune, C=VN"
+            echo "KEYSTORE_PATH=${KS_PATH}" >> "$GITHUB_ENV"
+            echo "KEYSTORE_PASSWORD=android" >> "$GITHUB_ENV"
+            echo "KEY_ALIAS=gctune" >> "$GITHUB_ENV"
+          fi
 
       - name: Build APK
         shell: bash
@@ -110,6 +142,7 @@ jobs:
           "${BT}/aapt" package \
             -f \
             -M "${GITHUB_WORKSPACE}/AndroidManifest.xml" \
+            -S "${GITHUB_WORKSPACE}/res" \
             -I "${ANDROID_JAR}" \
             -F "${OUT}/unsigned.apk"
 
@@ -125,21 +158,11 @@ jobs:
             "${OUT}/unsigned.apk" \
             "${OUT}/aligned.apk"
 
-          keytool -genkeypair \
-            -keystore "${OUT}/test-release.keystore" \
-            -storepass android \
-            -keypass android \
-            -alias gctune \
-            -keyalg RSA \
-            -keysize 2048 \
-            -validity 3650 \
-            -dname "CN=GC Tune Test, OU=CI, O=GC Tune, C=VN"
-
           "${BT}/apksigner" sign \
-            --ks "${OUT}/test-release.keystore" \
-            --ks-key-alias gctune \
-            --ks-pass pass:android \
-            --key-pass pass:android \
+            --ks "${KEYSTORE_PATH}" \
+            --ks-key-alias "${KEY_ALIAS}" \
+            --ks-pass "pass:${KEYSTORE_PASSWORD}" \
+            --key-pass "pass:${KEYSTORE_PASSWORD}" \
             --out "${OUT}/gctune-vietnamese.apk" \
             "${OUT}/aligned.apk"
 
