@@ -8,7 +8,7 @@
 
 Công cụ tinh chỉnh hệ thống nâng cao và triển khai kênh đặc quyền dành cho OriginOS và các thiết bị vivo. GC-Tune tận dụng môi trường thực thi của Game Cube (Chế độ Ultra Game Mode) để thực thi lệnh với quyền hệ thống nâng cao (`uid 1000` / `system`), cài đặt giao diện `.itz` tùy chỉnh và áp dụng màu sắc cho bộ biểu tượng trực tiếp trên trình khởi chạy OriginOS mà không cần root.
 
-[Tải bản phát hành mới nhất](https://github.com/thtuan612/GC-Tune-Vietnames/releases/tag/v1.2.2) &bull; [Thiết lập nhanh](#thiết-lập-nhanh) &bull; [Tính năng](#tổng-quan) &bull; [Biên dịch](#biên-dịch-từ-mã-nguồn)
+[Tải bản phát hành mới nhất](https://github.com/thtuan612/GC-Tune-Vietnames/releases/tag/v1.2.2-fix-icon-app) &bull; [Thiết lập nhanh](#thiết-lập-nhanh) &bull; [Tính năng](#tổng-quan) &bull; [Biên dịch](#biên-dịch-từ-mã-nguồn)
 
 ---
 
